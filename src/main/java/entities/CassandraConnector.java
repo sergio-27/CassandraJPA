@@ -25,7 +25,7 @@ public class CassandraConnector {
      * para establecer una conexion con cassadnra tenemos que pasarle la ip del
      * nodo y el puerto en el que escucha.
      */
-    private void connect(final String node, final Integer port) {
+    public void connect(final String node, final Integer port) {
         //creamos un objeto del tipo CluisterBuilder y le pasamos el nodo
         Cluster.Builder clusterBuilder = Cluster.builder().addContactPoint(node);
 

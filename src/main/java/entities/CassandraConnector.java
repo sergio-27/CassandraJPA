@@ -6,6 +6,7 @@
 package entities;
 
 import com.datastax.driver.core.Cluster;
+import com.datastax.driver.core.ProtocolVersion;
 import com.datastax.driver.core.Session;
 
 /**
@@ -26,8 +27,8 @@ public class CassandraConnector {
      * nodo y el puerto en el que escucha.
      */
     public void connect(final String node, final Integer port) {
-        //creamos un objeto del tipo CluisterBuilder y le pasamos el nodo
-        Cluster.Builder clusterBuilder = Cluster.builder().addContactPoint(node);
+        //creamos un objeto del tipo CluisterBuilder y le pasamos el nodo y especficamos el  protocolo que vamos a utilizar
+        Cluster.Builder clusterBuilder = Cluster.builder().addContactPoint(node).withProtocolVersion(ProtocolVersion.V4);
 
         //comprobamos que el valor que recibimos como puerto sea correcto
         if (port != null) {

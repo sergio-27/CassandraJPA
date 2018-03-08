@@ -5,14 +5,17 @@
  */
 
 import com.datastax.driver.core.Session;
+import com.datastax.driver.core.utils.UUIDs;
+import com.datastax.driver.mapping.Mapper;
+import dao.UserDAO;
 import entities.CassandraConnector;
 import entities.KeyspaceRepository;
+import entities.User;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import static org.junit.Assert.*;
 
 /**
  *
@@ -34,8 +37,11 @@ public class TestCassandra {
     CassandraConnector cassandraConnector;
     Session session;
     KeyspaceRepository keyspaceRepository;
-    static final String IP_ADDRESS = "127.0.1";
+    static final String IP_ADDRESS = "127.0.0.1";
     static final int port = 9042;
+    User user;
+    UserDAO userdao;
+    Mapper mapper;
 
     @Before
     public void setUp() {
@@ -43,6 +49,13 @@ public class TestCassandra {
         cassandraConnector.connect(IP_ADDRESS, port);
         session = cassandraConnector.getSession();
         keyspaceRepository = new KeyspaceRepository(session);
+        keyspaceRepository.createKeyspace("testspace", "SimpleStrategy", 1);
+        keyspaceRepository.useKeyspace("testspace");
+        //obtenemos userdao
+        userdao = new UserDAO(session);
+        mapper = userdao.getClassMapper();
+        user = new User(UUIDs.timeBased(), "sergio", "ssoo++", "sergio", 21, "Empleado");
+
     }
 
     @After
@@ -59,8 +72,9 @@ public class TestCassandra {
     // public void hello() {}
     @Test
     public void testCreateKeyspace() {
-           keyspaceRepository.createKeyspace("TestSpace", "SimpleStrategy", 3);
-           keyspaceRepository.useKeyspace("TestSpace");
-        //keyspaceRepository.deleteKeyspace("TestSpace");
+        //keyspaceRepository.deleteKeyspace("testspace");
+        
+        userdao.insertUser(user);
     }
+
 }

@@ -5,6 +5,7 @@
  */
 package entities;
 
+import com.datastax.driver.core.Session;
 import com.datastax.driver.mapping.annotations.Column;
 import com.datastax.driver.mapping.annotations.PartitionKey;
 import com.datastax.driver.mapping.annotations.Table;
@@ -16,21 +17,23 @@ import java.util.UUID;
  */
 
 //anotacion para crear tabla
-@Table(keyspace = "", name = "users",
+
+@Table(keyspace = "testspace", name = "users",
         readConsistency = "QUORUM",
-        writeConsistency = "QUOEUM",
+        writeConsistency = "QUORUM",
         caseSensitiveKeyspace = false,
         caseSensitiveTable = false)
-public class User {
+public class User{
     
     @PartitionKey(0)
     @Column(name = "user_id")
     private UUID id;
+    @PartitionKey(1)
     private String email;
     private String password;
     private String nombre;
     private int edad;
-    @PartitionKey(1)
+    @PartitionKey(2)
     private String grupo;
 
     private User(){}
@@ -92,9 +95,11 @@ public class User {
         this.grupo = grupo;
     }
     
-    
-    
-    
-    
-    
+    public void createTableUsuarios(Session session, String keyspaceName) {
+        StringBuilder sb = new StringBuilder("CREATE TABLE IF NOT EXISTS ").append(keyspaceName).append(".users").append("(").append("user_id uuid PRIMARY KEY, ").append("email text,").append("password text,").append("nombre text,").append("edad int,").append("grupo text);");
+
+        final String query = sb.toString();
+        session.execute(query);
+    }
+   
 }

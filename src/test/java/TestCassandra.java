@@ -10,8 +10,11 @@ import com.datastax.driver.core.utils.UUIDs;
 import com.datastax.driver.mapping.Mapper;
 import com.datastax.driver.mapping.MappingManager;
 import com.datastax.driver.mapping.Result;
+import dao.CustomerDAO;
 import dao.UserDAO;
 import entities.CassandraConnector;
+import entities.Customer;
+import entities.CustomerRepository;
 import entities.KeyspaceRepository;
 import entities.User;
 import entities.UserRepository;
@@ -47,18 +50,27 @@ public class TestCassandra {
     UserDAO userdao;
     Mapper mapper;
     UserRepository userRepository;
+    Customer customer;
+    CustomerDAO customerdao;
+    CustomerRepository customerRepository;
     UserAccesor userAccesor;
 
     @Before
     public void setUp() {
+        
         cassandraConnector = new CassandraConnector();
         cassandraConnector.connect(IP_ADDRESS, port);
         session = cassandraConnector.getSession();
+        //inicializamos keyrepository para crear el keyspace
         keyspaceRepository = new KeyspaceRepository(session);
         keyspaceRepository.createKeyspace("testspace", "SimpleStrategy", 1);
         keyspaceRepository.useKeyspace("testspace");
+        //inicializamos userrepository para poder crear la tabla
         userRepository = new UserRepository(session);
         userRepository.createTableUsuarios();
+        //inicializamos customerrepository y creamos la tabla
+        customerRepository = new CustomerRepository(session);
+        customerRepository.createTableCustomer();
         //obtenemos userdao
         userdao = new UserDAO(session);
         mapper = userdao.getClassMapper();

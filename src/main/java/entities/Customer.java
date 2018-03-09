@@ -7,7 +7,6 @@ package entities;
 
 import com.datastax.driver.mapping.annotations.PartitionKey;
 import com.datastax.driver.mapping.annotations.Table;
-import java.util.Date;
 import java.util.UUID;
 
 /**
@@ -28,17 +27,17 @@ public class Customer {
     private String nombre;
     private String cif;
     private String email;
-    private Estado estado;
-    private Date fechaAlta;
+    private String estado;
+    private String fechaAlta;
     
-    private enum Estado {
+    public enum Estado {
         ABIERTO, CERRADO, PENDIENTE
     }
 
     public Customer() {
     }
 
-    public Customer(UUID customerId, UUID employeId, String nombre, String cif, String email, Estado estado, Date fechaAlta) {
+    public Customer(UUID customerId, UUID employeId, String nombre, String cif, String email, String estado, String fechaAlta) {
         this.customerId = customerId;
         this.employeId = employeId;
         this.nombre = nombre;
@@ -88,22 +87,20 @@ public class Customer {
         this.email = email;
     }
 
-    public Estado getEstado() {
+    public String getEstado() {
         return estado;
     }
 
-    public void setEstado(Estado estado) {
+    public void setEstado(String estado) {
         this.estado = estado;
     }
 
-    public Date getFechaAlta() {
+    public String getFechaAlta() {
         return fechaAlta;
     }
 
-    public void setFechaAlta(Date fechaAlta) {
+    public void setFechaAlta(String fechaAlta) {
         this.fechaAlta = fechaAlta;
     }
-
-   
-    
+  
 }

@@ -95,6 +95,10 @@ public class TestCassandra {
         //keyspaceRepository.deleteKeyspace("testspace");
         userdao.insertUser(user);
         
+        //user.setEmail("prueba");
+        
+        userdao.insertUser(user);
+        
         userdao.getUserByUUID(user.getId());
 
         Result<User> userSet = userAccesor.getAll();

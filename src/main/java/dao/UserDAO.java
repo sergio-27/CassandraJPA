@@ -38,7 +38,12 @@ public class UserDAO {
     
     public void insertUser(User userAux){
         //obtenemos a partir del mappingmanager un mapper que es el que maneja las entidades
-        mapper.save(userAux, Mapper.Option.tracing(true));
+        //con este save guardamos los daros durante 5 segundos, pasado el tiempo se borraran
+        mapper.save(userAux, Mapper.Option.ttl(5));
+        
+        //con esta guardamos el dato sin que se borre
+        //mapper.save(userAux);
+        
     }
     
     public User getUserByUUID(UUID userId){
@@ -51,7 +56,7 @@ public class UserDAO {
     //cassandra nos permite eliminar un registro de 
     //la base de datos ya se proporcionando una pk o el objeto qu euqeremos eliminar
     public void deleteUser(Object userOrUUID){
-        mapper.delete(user);
+        mapper.delete(userOrUUID);
     }
 
 }

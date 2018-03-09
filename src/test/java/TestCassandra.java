@@ -4,13 +4,17 @@
  * and open the template in the editor.
  */
 
+import accesors.UserAccesor;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.utils.UUIDs;
 import com.datastax.driver.mapping.Mapper;
+import com.datastax.driver.mapping.MappingManager;
+import com.datastax.driver.mapping.Result;
 import dao.UserDAO;
 import entities.CassandraConnector;
 import entities.KeyspaceRepository;
 import entities.User;
+import entities.UserRepository;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -42,6 +46,8 @@ public class TestCassandra {
     User user;
     UserDAO userdao;
     Mapper mapper;
+    UserRepository userRepository;
+    UserAccesor userAccesor;
 
     @Before
     public void setUp() {
@@ -51,11 +57,13 @@ public class TestCassandra {
         keyspaceRepository = new KeyspaceRepository(session);
         keyspaceRepository.createKeyspace("testspace", "SimpleStrategy", 1);
         keyspaceRepository.useKeyspace("testspace");
+        userRepository = new UserRepository(session);
+        userRepository.createTableUsuarios();
         //obtenemos userdao
         userdao = new UserDAO(session);
         mapper = userdao.getClassMapper();
-        user = new User(UUIDs.timeBased(), "sergio", "ssoo++", "sergio", 21, "Empleado");
-
+        user = new User(UUIDs.timeBased(), "ruiz", "ssoo++", "sergio", 21, "Empleado");
+        userAccesor = new MappingManager(session).createAccessor(UserAccesor.class);
     }
 
     @After
@@ -73,8 +81,15 @@ public class TestCassandra {
     @Test
     public void testCreateKeyspace() {
         //keyspaceRepository.deleteKeyspace("testspace");
-        
         userdao.insertUser(user);
+        
+        userdao.getUserByUUID(user.getId());
+
+        Result<User> userSet = userAccesor.getAll();
+        
+        for (User u : userSet){
+            System.out.println("Id: " + u.getId());
+        }
     }
 
 }

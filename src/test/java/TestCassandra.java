@@ -103,6 +103,7 @@ public class TestCassandra {
         
         for (User u : userSet){
             System.out.println("Id: " + u.getId());
+            System.out.println(u.getEmail());
         }
     }
 

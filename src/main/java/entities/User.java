@@ -99,4 +99,11 @@ public class User {
         session.execute(query);
     }
 
+    @Override
+    public String toString() {
+        return "User{" + "email=" + email + ", password=" + password + ", nombre=" + nombre + ", edad=" + edad + ", grupo=" + grupo + "}";
+    }
+    
+    
+
 }

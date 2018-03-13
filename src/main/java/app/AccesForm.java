@@ -19,11 +19,8 @@ import entities.CustomerRepository;
 import entities.KeyspaceRepository;
 import entities.User;
 import entities.UserRepository;
-import java.io.IOException;
+import java.util.List;
 import java.util.Scanner;
-import java.util.UUID;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  *
@@ -49,6 +46,7 @@ public class AccesForm {
     static final int port = 9042;
     String email = "";
     String pass = "";
+    Result<User> userSet;
 
     public static void main(String[] args) {
 
@@ -75,7 +73,7 @@ public class AccesForm {
                     o = accesForm.showAdminMenu(accesForm);
                     accesForm.adminAction(accesForm, o);
 
-                } while (o != 5);
+                } while (o < 1 || o != 5);
                 break;
             case "Empleado":
                 accesForm.showEmpleadoMenu(accesForm);
@@ -94,18 +92,24 @@ public class AccesForm {
             case 1:
                 user = af.altaUserForm();
 
+                //insertamos el usuario a cassadnra 
                 userdao.insertUser(user);
 
                 System.out.println("Usuario insertado!");
                 break;
             //ver
             case 2:
+                //mostramos usuarios
+                af.showUsers();
                 break;
             //borrar
             case 3:
+                //eliminaoms el usuario
+                af.deleteUser();
                 break;
             //modificar
             case 4:
+                af.updateUser();
                 break;
             //salir
             case 5:
@@ -116,8 +120,130 @@ public class AccesForm {
 
     }
 
+    public void updateUser() {
+
+        String updatedUserEmail = "";
+        do {
+
+            showUsers();
+            System.out.println("Indica el email del usuario que quiere modificar: ");
+
+            try {
+                updatedUserEmail = opcion.next();
+            } catch (NumberFormatException nullPointer) {
+                System.err.println("Escriba un correo válido.");
+            }
+
+        } while (!updatedUserEmail.equals(""));
+
+        //obtenemos el usuario seleccionado por el usuario
+        User u = getUserByeEmail(updatedUserEmail);
+        showUserProperties(u);
+
+    }
+
+    public void showUserProperties(User us) {
+        String newEmail, newName, newGroup;
+        int opcionAux, newEdad;
+        do {
+            System.out.println("[1] - Email. ");
+            System.out.println("[2] - Nombre. ");
+            System.out.println("[3] - Grupo.");
+            System.out.println("[4] - Edad. ");
+            System.out.println("[5] - Salir. ");
+
+            System.out.println("Datos actuales: ");
+            us.toString();
+            opcionAux = opcion.nextInt();
+
+            switch (opcionAux) {
+                //email
+                case 1:
+
+                    System.out.println("Escribe el nuevo email: ");
+                    newEmail = opcion.next();
+
+                    break;
+                //nombre
+                case 2:
+
+                    System.out.println("Escribe el nueov nombre: ");
+                    newName = opcion.next();
+
+                    break;
+                //grupo
+                case 3:
+                    do {
+                        System.out.println("Escribe empleado o admin.");
+                        newGroup = opcion.next();
+                    } while (!newGroup.equalsIgnoreCase("admin") && !newGroup.equalsIgnoreCase("empleado"));
+
+                    break;
+                //edad
+                case 4:
+
+                    System.out.println("Escribe la nueva edad.");
+                    newEdad = opcion.nextInt();
+                    break;
+                case 5:
+                    System.out.println("Volviendo al menú.");
+                    break;
+                default:
+                    System.err.println("Error Show User Properties");
+            }
+
+        } while (opcionAux < 1 || opcionAux != 5);
+
+    }
+
+    public void deleteUser() {
+        String deletedEmail;
+        showUsers();
+        System.out.println("\nEscribe el email del usuario que quieres borrar: ");
+        deletedEmail = opcion.next();
+        //obtenemos el usuario por el email
+        User deletedUser = getUserByeEmail(deletedEmail);
+        if (deletedUser == null) {
+            System.err.println("No hay usuarios con el email escrito.");
+        } else {
+            userdao.deleteUser(deletedUser.getId());
+            System.out.println("Usuario Eliminado");
+        }
+
+    }
+
+    public User getUserByeEmail(String deletedEmail) {
+        User userAux = null;
+        for (User u : userAccesor.getAll()) {
+            if (u.getEmail().equals(deletedEmail)) {
+                userAux = u;
+            }
+        }
+
+        if (userAux == null) {
+            System.err.println("No se ha encontrado el usuario.");
+        }
+
+        return userAux;
+    }
+
+    public void showUsers() {
+        int position = 0;
+
+        for (User u : userAccesor.getAll()) {
+            position++;
+            System.out.println("\n[" + position + "]");
+            System.out.println("\nUser Id: " + u.getId());
+            System.out.println("User Email: " + u.getEmail());
+            System.out.println("User Name: " + u.getNombre());
+            System.out.println("User Group: " + u.getGrupo());
+            System.out.println("User Age: " + u.getEdad() + "\n");
+        }
+
+    }
+
     public User altaUserForm() {
-        User user;
+        User userAux;
         String correo, passAux, nombre, grupo;
         int edad, resu;
         do {
@@ -143,16 +269,16 @@ public class AccesForm {
         } while (resu == 1);
 
         //inicializamos el usuarios
-        user = new User(UUIDs.timeBased(), correo, pass, nombre, edad, grupo);
+        userAux = new User(UUIDs.timeBased(), correo, passAux, nombre, edad, grupo);
 
-        return user;
+        return userAux;
     }
 
     public int showAdminMenu(AccesForm accesForm) {
         int opcion2 = 0;
         do {
 
-            System.out.println("\n************" + accesForm.userLogged.getNombre() + "***************");
+            System.out.println("\n************ " + accesForm.userLogged.getNombre() + " ***************");
             System.out.println("*** 1 - Alta Usuarios. ***");
             System.out.println("*** 2 - Ver Usuarios. ***");
             System.out.println("*** 3 - Borrar Usuarios. ***");
@@ -203,7 +329,7 @@ public class AccesForm {
         //0 no existe el usuario, 1 existe
         int num = 0;
         //obtenemos todos los usuarios
-        Result<User> userSet = userAccesor.getAll();
+        ;
 
         //comprobamos que el nombre y pass proporcionados existan ya en la bbd
         //si el tamaño de param es dos, estamos llamando la funcion desde el login ya que pasamos email y pass
@@ -257,6 +383,7 @@ public class AccesForm {
         userdao = new UserDAO(session);
         mapper = userdao.getClassMapper();
         userAccesor = new MappingManager(session).createAccessor(UserAccesor.class);
+        userSet = userAccesor.getAll();
     }
 
 }

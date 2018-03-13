@@ -37,9 +37,9 @@ public class CustomerDAO {
     
     public void insertCustomer(Customer customerAux){
         
-        mapper.save(customerAux, Mapper.Option.ttl(5));
+        //mapper.save(customerAux, Mapper.Option.ttl(5));
         
-        //mapper.save(customerAux);
+        mapper.save(customerAux);
     }
     
     public Customer getCustomerByUUID(UUID customerId){

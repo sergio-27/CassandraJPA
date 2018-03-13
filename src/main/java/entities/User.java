@@ -6,11 +6,9 @@
 package entities;
 
 import com.datastax.driver.core.Session;
-import com.datastax.driver.mapping.annotations.ClusteringColumn;
 import com.datastax.driver.mapping.annotations.Column;
 import com.datastax.driver.mapping.annotations.PartitionKey;
 import com.datastax.driver.mapping.annotations.Table;
-import java.util.List;
 import java.util.UUID;
 
 /**
@@ -18,7 +16,7 @@ import java.util.UUID;
  * @author alu2015018
  */
 //anotacion para crear tabla
-@Table(keyspace = "testspace", name = "users",
+@Table(keyspace = "CassandraDB", name = "users",
         readConsistency = "QUORUM",
         writeConsistency = "QUORUM",
         caseSensitiveKeyspace = false,

@@ -13,7 +13,7 @@ import java.util.UUID;
  *
  * @author alu2015018
  */
-@Table(keyspace = "testspace", name = "customers",
+@Table(keyspace = "CassandraDB", name = "customers",
         readConsistency = "QUORUM",
         writeConsistency = "QUORUM",
         caseSensitiveKeyspace = false,

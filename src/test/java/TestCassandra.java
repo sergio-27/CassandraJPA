@@ -63,18 +63,16 @@ public class TestCassandra {
         session = cassandraConnector.getSession();
         //inicializamos keyrepository para crear el keyspace
         keyspaceRepository = new KeyspaceRepository(session);
-        keyspaceRepository.createKeyspace("testspace", "SimpleStrategy", 1);
-        keyspaceRepository.useKeyspace("testspace");
+        keyspaceRepository.createKeyspace("CassandraDB", "SimpleStrategy", 1);
+        keyspaceRepository.useKeyspace("CassandraDB");
         //inicializamos userrepository para poder crear la tabla
         userRepository = new UserRepository(session);
         userRepository.createTableUsuarios();
-        //inicializamos customerrepository y creamos la tabla
-        customerRepository = new CustomerRepository(session);
-        customerRepository.createTableCustomer();
+        
         //obtenemos userdao
         userdao = new UserDAO(session);
         mapper = userdao.getClassMapper();
-        user = new User(UUIDs.timeBased(), "ruiz", "ssoo++", "sergio", 21, "Empleado");
+        user = new User(UUIDs.timeBased(), "admin@stucom.com", "admin", "admin", 21, "Admin");
         userAccesor = new MappingManager(session).createAccessor(UserAccesor.class);
     }
 

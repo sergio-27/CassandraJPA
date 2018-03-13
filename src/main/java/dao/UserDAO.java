@@ -39,10 +39,10 @@ public class UserDAO {
     public void insertUser(User userAux){
         //obtenemos a partir del mappingmanager un mapper que es el que maneja las entidades
         //con este save guardamos los daros durante 5 segundos, pasado el tiempo se borraran
-        mapper.save(userAux, Mapper.Option.ttl(10));
+        //mapper.save(userAux, Mapper.Option.ttl(10));
         
         //con esta guardamos el dato sin que se borre
-        //mapper.save(userAux);
+        mapper.save(userAux);
         
     }
     

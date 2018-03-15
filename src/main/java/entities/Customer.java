@@ -5,6 +5,7 @@
  */
 package entities;
 
+import com.datastax.driver.mapping.annotations.Column;
 import com.datastax.driver.mapping.annotations.PartitionKey;
 import com.datastax.driver.mapping.annotations.Table;
 import java.util.UUID;
@@ -23,13 +24,14 @@ public class Customer {
     @PartitionKey(0)
     private UUID customerId;
     @PartitionKey(1)
+    @Column(name = "user_id")
     private UUID employeId;
     private String nombre;
     private String cif;
     private String email;
     private String estado;
     private String fechaAlta;
-    
+
     public enum Estado {
         ABIERTO, CERRADO, PENDIENTE
     }
@@ -102,5 +104,5 @@ public class Customer {
     public void setFechaAlta(String fechaAlta) {
         this.fechaAlta = fechaAlta;
     }
-  
+
 }

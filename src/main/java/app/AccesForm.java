@@ -5,6 +5,7 @@
  */
 package app;
 
+import accesors.CustomerAccesor;
 import accesors.UserAccesor;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.utils.UUIDs;
@@ -15,12 +16,17 @@ import dao.CustomerDAO;
 import dao.UserDAO;
 import entities.CassandraConnector;
 import entities.Customer;
+import entities.Customer.Estado;
 import entities.CustomerRepository;
 import entities.KeyspaceRepository;
 import entities.User;
 import entities.UserRepository;
-import java.util.List;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.InputMismatchException;
 import java.util.Scanner;
+import java.util.concurrent.TimeUnit;
 
 /**
  *
@@ -36,6 +42,7 @@ public class AccesForm {
     Mapper mapper;
     UserRepository userRepository;
     Customer customer;
+    CustomerAccesor customerAccesor;
     CustomerDAO customerdao;
     CustomerRepository customerRepository;
     UserAccesor userAccesor;
@@ -47,6 +54,7 @@ public class AccesForm {
     String email = "";
     String pass = "";
     Result<User> userSet;
+    Result<Customer> customerSet;
 
     public static void main(String[] args) {
 
@@ -75,13 +83,109 @@ public class AccesForm {
 
                 } while (o < 1 || o != 5);
                 break;
-            case "Empleado":
-                accesForm.showEmpleadoMenu(accesForm);
+            case "empleado":
+                do {
+
+                    o = accesForm.showEmpleadoMenu(accesForm);
+                    accesForm.menuAction(accesForm, o);
+
+                } while (o < 1 || o != 5);
 
                 break;
             default:
                 System.err.println("Grupo no registrado.");
         }
+
+    }
+
+    //funcion igual que adminAction
+    public void menuAction(AccesForm af, int opcion) {
+        switch (opcion) {
+            //alta cliente
+            case 1:
+                customer = af.altaCustomer();
+
+                customerdao.insertCustomer(customer);
+
+                System.out.println("Cliente insertado!");
+                break;
+            //modificar cliente
+            case 2:
+
+                customer = af.updateCustomer();
+
+                customerdao.insertCustomer(customer);
+
+                System.out.println("Cliente actualizado.");
+                break;
+            //eliminar cliente
+            case 3:
+                af.deleteCustomer();
+
+                System.out.println("Cliente eliminado.");
+                break;
+            //ver clientes
+            case 4:
+
+                af.showCustomer();
+                break;
+            //salir
+            case 5:
+                System.out.println("Adeu empleado.");
+                break;
+            //error
+            default:
+                System.err.println("Error Menu Action");
+        }
+    }
+
+    public void deleteCustomer() {
+        String deletedCIF;
+        showCustomer();
+        System.out.println("\nEscribe el cif del registro que desea eliminar: ");
+        deletedCIF = opcion.next();
+        //obtenemos el customer que queremos borrar
+        Customer deletedCustomer = getCustomerByCIF(deletedCIF);
+        if (deletedCustomer == null) {
+            System.out.println("No hay clientes con el CIF especificado.");
+        } else {
+            customerdao.deleteCustomer(deletedCustomer);
+            System.out.println("Cliente borrado.");
+        }
+    }
+
+    public Customer altaCustomer() {
+        String nombre, cif, emailCust, estado, fechaAlta;
+        int resu;
+        Customer customerAux;
+        do {
+            System.out.println("Introduzca el nombre del cliente: ");
+            nombre = opcion.next();
+            System.out.println("Introduzca el cif: ");
+            cif = opcion.next();
+            System.out.println("Introduzca el email del cliente: ");
+            emailCust = opcion.next();
+            //inicializamos el estado del cliente
+            estado = Estado.ABIERTO.toString();
+            //obtenemos fecha actual
+            DateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
+            Date date = new Date();
+
+            //transformamos la fecha a formato string
+            fechaAlta = dateFormat.format(date);
+            System.out.println(fechaAlta);
+
+            resu = checkCustomerExists(cif);
+            if (resu == 1) {
+                System.out.println("El cliente proporcionado ya existe.");
+            }
+
+        } while (resu == 1);
+
+        //si el usuario no existe instanciamos un nuevo customer para insertarlo en la bbd
+        customerAux = new Customer(UUIDs.timeBased(), userLogged.getId(), nombre, cif, emailCust, estado, fechaAlta);
+
+        return customerAux;
 
     }
 
@@ -106,22 +210,57 @@ public class AccesForm {
             case 3:
                 //eliminaoms el usuario
                 af.deleteUser();
+
                 break;
             //modificar
             case 4:
-                af.updateUser();
+                user = af.updateUser();
+
+                userdao.insertUser(user);
+
+                System.out.println("Usuario actualizado.");
                 break;
             //salir
             case 5:
-                System.out.println("Adeu");
+                System.out.println("Adeu admin.");
                 break;
             default:
+                System.err.println("Error Admin Menu");
         }
 
     }
 
-    public void updateUser() {
+    public Customer updateCustomer() {
+        Customer c;
+        String updatedCustCIF = "";
+        do {
 
+            showCustomer();
+            System.out.println("\nIndicia el CIF del cliente que desea modificar.");
+            try {
+                updatedCustCIF = opcion.next();
+            } catch (InputMismatchException nullPointer) {
+
+            }
+
+            //obtenemos el customer seleccionado
+            c = getCustomerByCIF(updatedCustCIF);
+            if (c != null) {
+
+                c = modifyCustomerProperties(c);
+
+            } else {
+                System.err.println("Escriba un CIF válido.");
+            }
+
+        } while (c == null);
+
+        return c;
+    }
+
+    public User updateUser() {
+
+        User u;
         String updatedUserEmail = "";
         do {
 
@@ -130,30 +269,104 @@ public class AccesForm {
 
             try {
                 updatedUserEmail = opcion.next();
-            } catch (NumberFormatException nullPointer) {
+            } catch (InputMismatchException nullPointer) {
+
+            }
+            //obtenemos el usuario seleccionado por el usuario
+            u = getUserByeEmail(updatedUserEmail);
+            if (u != null) {
+                u = modifyUserProperties(u);
+            } else {
                 System.err.println("Escriba un correo válido.");
             }
 
-        } while (!updatedUserEmail.equals(""));
+        } while (u == null);
 
-        //obtenemos el usuario seleccionado por el usuario
-        User u = getUserByeEmail(updatedUserEmail);
-        showUserProperties(u);
+        return u;
 
     }
 
-    public void showUserProperties(User us) {
+    public Customer modifyCustomerProperties(Customer c) {
+        String newName, newCIF, newEmail, newEstado;
+        int opcionAux;
+        do {
+            System.out.println("Seleccione que campo desea modificar: ");
+            
+            System.out.println("[1] - Nombre");
+            System.out.println("[2] - CIF");
+            System.out.println("[3] - Estado");
+            System.out.println("[4] - Email");
+            System.out.println("[5] - Salir");
+
+            opcionAux = opcion.nextInt();
+
+            switch (opcionAux) {
+                //nombre cliente
+                case 1:
+
+                    System.out.println("Escriba el nuevo nombre:");
+                    newName = opcion.next();
+                    c.setNombre(newName);
+
+                    break;
+                //cif
+                case 2:
+
+                    System.out.println("Escriba el nuevo CIF: ");
+                    newCIF = opcion.next();
+                    c.setCif(newCIF);
+
+                    break;
+                //estado
+                case 3:
+                    do {
+                        System.out.println("Escriba el nuevo estado: "
+                                + "PENDIENTE, ABIERTO, CERRADO.");
+                        newEstado = opcion.next();
+
+                    } while (!newEstado.equalsIgnoreCase("pendiente") && !newEstado.equalsIgnoreCase("abierto") && !newEstado.equalsIgnoreCase("cerrado"));
+
+                    c.setEstado(newEstado);
+
+                    break;
+                //email
+                case 4:
+
+                    System.out.println("Escriba el nuevo email: ");
+                    newEmail = opcion.next();
+                    c.setEmail(newEmail);
+
+                    break;
+                //salir
+                case 5:
+                    System.out.println("Volviendo al menu principal.");
+                    break;
+                default:
+                    System.err.println("Error Show Customer Properties");
+
+            }
+
+        } while (opcionAux < 1 || opcionAux != 5);
+
+        //una vez el usuario presione 5 salimos del menu de actualizar campos y devolvemos el objeto
+        return c;
+    }
+
+    public User modifyUserProperties(User us) {
         String newEmail, newName, newGroup;
         int opcionAux, newEdad;
         do {
+            
+            System.out.println("Seleccione que campo desea modificar: ");
+            
             System.out.println("[1] - Email. ");
             System.out.println("[2] - Nombre. ");
             System.out.println("[3] - Grupo.");
             System.out.println("[4] - Edad. ");
             System.out.println("[5] - Salir. ");
 
-            System.out.println("Datos actuales: ");
-            us.toString();
+            
+
             opcionAux = opcion.nextInt();
 
             switch (opcionAux) {
@@ -163,12 +376,16 @@ public class AccesForm {
                     System.out.println("Escribe el nuevo email: ");
                     newEmail = opcion.next();
 
+                    us.setEmail(newEmail);
+
                     break;
                 //nombre
                 case 2:
 
-                    System.out.println("Escribe el nueov nombre: ");
+                    System.out.println("Escribe el nuevo nombre: ");
                     newName = opcion.next();
+
+                    us.setNombre(newName);
 
                     break;
                 //grupo
@@ -178,12 +395,16 @@ public class AccesForm {
                         newGroup = opcion.next();
                     } while (!newGroup.equalsIgnoreCase("admin") && !newGroup.equalsIgnoreCase("empleado"));
 
+                    us.setGrupo(newGroup);
+
                     break;
                 //edad
                 case 4:
 
                     System.out.println("Escribe la nueva edad.");
                     newEdad = opcion.nextInt();
+
+                    us.setEdad(newEdad);
                     break;
                 case 5:
                     System.out.println("Volviendo al menú.");
@@ -194,37 +415,68 @@ public class AccesForm {
 
         } while (opcionAux < 1 || opcionAux != 5);
 
+        return us;
+
     }
 
     public void deleteUser() {
         String deletedEmail;
-        showUsers();
-        System.out.println("\nEscribe el email del usuario que quieres borrar: ");
-        deletedEmail = opcion.next();
-        //obtenemos el usuario por el email
-        User deletedUser = getUserByeEmail(deletedEmail);
-        if (deletedUser == null) {
-            System.err.println("No hay usuarios con el email escrito.");
-        } else {
-            userdao.deleteUser(deletedUser.getId());
-            System.out.println("Usuario Eliminado");
-        }
+        User deletedUser;
+        do {
+            showUsers();
+            System.out.println("\nEscribe el email del usuario que quieres borrar: ");
+            deletedEmail = opcion.next();
+            //obtenemos el usuario por el email
+            deletedUser = getUserByeEmail(deletedEmail);
+            if (deletedUser == null) {
+                System.err.println("No hay usuarios con el email proporcionado.");
+            } else {
+                userdao.deleteUser(deletedUser.getId());
+                System.out.println("Usuario Eliminado.");
+            }
+        } while (deletedUser == null);
 
     }
 
-    public User getUserByeEmail(String deletedEmail) {
+    public User getUserByeEmail(String email) {
         User userAux = null;
         for (User u : userAccesor.getAll()) {
-            if (u.getEmail().equals(deletedEmail)) {
+            if (u.getEmail().equals(email)) {
                 userAux = u;
             }
         }
 
         if (userAux == null) {
-            System.err.println("No se ha encontrado el usuario.");
+            System.err.println("\nNo se ha encontrado el usuario.");
+            try {
+                TimeUnit.SECONDS.sleep(3);
+            } catch (InterruptedException ex) {
+
+            }
         }
 
         return userAux;
+    }
+
+    public Customer getCustomerByCIF(String cif) {
+        Customer cust = null;
+
+        for (Customer c : customerAccesor.getAllCustomer()) {
+            if (c.getCif().equals(cif)) {
+                cust = c;
+            }
+        }
+
+        if (cust == null) {
+            System.err.println("\nNo se ha encontrado el cif proporcionado.");
+            try {
+                TimeUnit.SECONDS.sleep(5);
+            } catch (InterruptedException ex) {
+
+            }
+        }
+
+        return cust;
     }
 
     public void showUsers() {
@@ -233,13 +485,28 @@ public class AccesForm {
         for (User u : userAccesor.getAll()) {
             position++;
             System.out.println("\n[" + position + "]");
-            System.out.println("\nUser Id: " + u.getId());
+            System.out.println("User Id: " + u.getId());
             System.out.println("User Email: " + u.getEmail());
             System.out.println("User Name: " + u.getNombre());
             System.out.println("User Group: " + u.getGrupo());
             System.out.println("User Age: " + u.getEdad() + "\n");
         }
 
+    }
+
+    public void showCustomer() {
+        int position = 0;
+
+        for (Customer c : customerAccesor.getAllCustomer()) {
+            position++;
+            System.out.println("\n[" + position + "]");
+            System.out.println("Customer Id: " + c.getCustomerId());
+            System.out.println("Customer Name: " + c.getNombre());
+            System.out.println("Customer CIF: " + c.getCif());
+            System.out.println("Customer Email: " + c.getEmail());
+            System.out.println("Customer State: " + c.getEstado());
+            System.out.println("Customer Date: " + c.getFechaAlta() + "\n");
+        }
     }
 
     public User altaUserForm() {
@@ -292,8 +559,8 @@ public class AccesForm {
         return opcion2;
     }
 
-    public void showEmpleadoMenu(AccesForm accesFormAux) {
-        int opcion2;
+    public int showEmpleadoMenu(AccesForm accesFormAux) {
+        int opcion2 = 0;
         do {
 
             System.out.println("\n************ " + accesFormAux.userLogged.getNombre() + " ***************");
@@ -306,6 +573,8 @@ public class AccesForm {
             opcion2 = this.opcion.nextInt();
 
         } while (opcion2 < 1 || opcion2 > 4);
+
+        return opcion2;
     }
 
     public void loginUser() {
@@ -329,7 +598,6 @@ public class AccesForm {
         //0 no existe el usuario, 1 existe
         int num = 0;
         //obtenemos todos los usuarios
-        ;
 
         //comprobamos que el nombre y pass proporcionados existan ya en la bbd
         //si el tamaño de param es dos, estamos llamando la funcion desde el login ya que pasamos email y pass
@@ -351,6 +619,20 @@ public class AccesForm {
 
         return num;
 
+    }
+
+    public int checkCustomerExists(String cif) {
+        //0 el customer no existe
+        int num = 0;
+
+        for (Customer c : customerSet) {
+            if (c.getCif().equalsIgnoreCase(cif)) {
+                //customer existe
+                num = 1;
+            }
+        }
+
+        return num;
     }
 
     public void connectToCassandra() {
@@ -384,6 +666,10 @@ public class AccesForm {
         mapper = userdao.getClassMapper();
         userAccesor = new MappingManager(session).createAccessor(UserAccesor.class);
         userSet = userAccesor.getAll();
+        customerdao = new CustomerDAO(session);
+        mapper = customerdao.getClassMapper();
+        customerAccesor = new MappingManager(session).createAccessor(CustomerAccesor.class);
+        customerSet = customerAccesor.getAllCustomer();
     }
 
 }

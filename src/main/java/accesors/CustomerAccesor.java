@@ -6,6 +6,7 @@
 package accesors;
 
 import com.datastax.driver.mapping.Result;
+import com.datastax.driver.mapping.annotations.Accessor;
 import com.datastax.driver.mapping.annotations.Query;
 import entities.Customer;
 
@@ -13,6 +14,7 @@ import entities.Customer;
  *
  * @author alu2015018
  */
+@Accessor
 public interface CustomerAccesor {
     
     @Query("SELECT * FROM customers")

@@ -72,7 +72,7 @@ public class TestCassandra {
         //obtenemos userdao
         userdao = new UserDAO(session);
         mapper = userdao.getClassMapper();
-        user = new User(UUIDs.timeBased(), "admin@stucom.com", "admin", "admin", 21, "Admin");
+        user = new User(UUIDs.timeBased(), "admin@stucom.com", "admin", "admin", 21, "admin");
         userAccesor = new MappingManager(session).createAccessor(UserAccesor.class);
     }
 
